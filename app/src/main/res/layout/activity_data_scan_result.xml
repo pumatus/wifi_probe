@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/wifi_2"
+    android:orientation="vertical">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:background="#00000000"
+        android:gravity="center">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="串并任务"
+            android:textColor="@android:color/white"
+            android:textSize="18sp" />
+
+    </LinearLayout>
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <TextView
+            android:id="@+id/tv_title"
+            android:layout_marginLeft="30dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="本次串并结果如下:"
+            android:textColor="#00d2d0"
+            android:textSize="18sp"
+            android:layout_marginStart="30dp" />
+
+        <ImageView
+            android:id="@+id/img_diver_one"
+            android:layout_below="@+id/tv_title"
+            android:layout_width="match_parent"
+            android:layout_marginTop="5dp"
+            android:layout_height="0.5dp"
+            android:layout_marginLeft="30dp"
+            android:layout_marginRight="30dp"
+            android:background="#00d2d0" />
+
+        <LinearLayout
+            android:id="@+id/ll_top"
+            android:layout_marginTop="5dp"
+            android:layout_marginBottom="5dp"
+            android:layout_below="@+id/img_diver_one"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="wrap_content"
+                android:text="MAC地址"
+                android:gravity="center"
+                android:textSize="16sp"
+                android:textColor="#00d2d0"
+                />
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="wrap_content"
+                android:text="设备名称"
+                android:gravity="center"
+                android:textSize="16sp"
+                android:textColor="#00d2d0"
+                />
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:gravity="center"
+                android:layout_height="wrap_content"
+                android:text="重复次数"
+                android:textSize="16sp"
+                android:textColor="#00d2d0"
+                />
+
+        </LinearLayout>
+
+        <ImageView
+            android:id="@+id/img_diver_two"
+            android:layout_below="@+id/ll_top"
+            android:layout_width="match_parent"
+            android:layout_marginTop="5dp"
+            android:layout_height="0.5dp"
+            android:layout_marginLeft="30dp"
+            android:layout_marginRight="30dp"
+            android:background="#00d2d0" />
+
+        <ListView
+            android:layout_below="@+id/img_diver_two"
+            android:id="@+id/list_address"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:divider="@drawable/diver"
+            android:dividerHeight="1dp"
+            android:stackFromBottom="true" />
+
+    </RelativeLayout>
+</LinearLayout>
