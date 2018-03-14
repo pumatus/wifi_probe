@@ -32,7 +32,6 @@ public class ReceiveSocketService {
 					}
 				}
 			}
-			
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

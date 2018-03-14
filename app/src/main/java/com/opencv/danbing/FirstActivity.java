@@ -20,12 +20,9 @@ public class FirstActivity extends AppCompatActivity {
 		//定时3000毫秒
 		Integer time = 2000;
 		Handler handler = new Handler();
-		handler.postDelayed(new Runnable() {
-			@Override
-			public void run() {
-				startActivity(new Intent(FirstActivity.this, MainActivity.class));
-				finish();
-			}
+		handler.postDelayed(() -> {
+			startActivity(new Intent(FirstActivity.this, MainActivity.class));
+			finish();
 		}, time);
 		
 		//预先加载数据

@@ -252,15 +252,15 @@ public class BLTManager {
 			//mBluetoothSocket = (BluetoothSocket) btDev.getClass().getMethod("createRfcommSocket", new Class[]{int.class}).invoke(btDev, 1);
 			Log.d("blueTooth", "开始连接...");
 			//在建立之前调用
-			if (getmBluetoothAdapter().isDiscovering())
-				//停止搜索
-				getmBluetoothAdapter().cancelDiscovery();
-			//如果当前socket处于非连接状态则调用连接
-			if (!getmBluetoothSocket().isConnected()) {
-				//你应当确保在调用connect()时设备没有执行搜索设备的操作。
-				// 如果搜索设备也在同时进行，那么将会显著地降低连接速率，并很大程度上会连接失败。
-				getmBluetoothSocket().connect();
-			}
+//			if (getmBluetoothAdapter().isDiscovering())
+//				//停止搜索
+//				getmBluetoothAdapter().cancelDiscovery();
+//			//如果当前socket处于非连接状态则调用连接
+//			if (!getmBluetoothSocket().isConnected()) {
+//				//你应当确保在调用connect()时设备没有执行搜索设备的操作。
+//				// 如果搜索设备也在同时进行，那么将会显著地降低连接速率，并很大程度上会连接失败。
+//				getmBluetoothSocket().connect();
+//			}
 			Log.d("blueTooth", "已经链接");
 			if (handler == null) return;
 			//结果回调

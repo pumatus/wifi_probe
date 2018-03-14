@@ -50,8 +50,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 					if (device != null) {
 						tvTitle.setText("设备" + device.getName() + "已经接入");
 						Toast.makeText(MainActivity.this, "设备" + device.getName() + "已经接入", Toast.LENGTH_LONG).show();
-//					Intent intent = new Intent(MainActivity.this, BLTSocketAcivity.class);
-//					startActivity(intent);
 					}
 					break;
 				case 4://已连接某个设备
@@ -60,13 +58,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 					}
 					BluetoothDevice device1 = (BluetoothDevice) msg.obj;
 					Log.e("BluetoothDevice ", device1.getName() + "");
-					if (device1 != null) {
-						tvTitle.setText("已连接" + device1.getName() + "设备");
-						Toast.makeText(MainActivity.this, "已连接" + device1.getName() + "设备", Toast.LENGTH_LONG).show();
-						Intent intent1 = new Intent(MainActivity.this, BLTListActivity.class);
-						intent1.putExtra("address", device1.getAddress());
-						startActivity(intent1);
-					}
+					tvTitle.setText("已连接" + device1.getName() + "设备");
+					Toast.makeText(MainActivity.this, "已连接" + device1.getName() + "设备", Toast.LENGTH_LONG).show();
+					Intent intent1 = new Intent(MainActivity.this, BLTListActivity.class);
+					intent1.putExtra("address", device1.getAddress());
+					startActivity(intent1);
 					break;
 				case 5:
 					tvTitle.setText("选取设备连接");
@@ -177,33 +173,19 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 		listView.setAdapter(myAdapter);
 		Button searchBtn = view.findViewById(R.id.btn_search);
 		Button cancelBtn = view.findViewById(R.id.btn_cancel);
-		searchBtn.setOnClickListener(new View.OnClickListener() {
-			@Override
-			public void onClick(View v) {
-				tvTitle.setText("查找设备中...");
-				BLTManager.getInstance().clickBlt(MainActivity.this, BLTContant.BLUE_TOOTH_SEARTH);
-			}
+		searchBtn.setOnClickListener(v -> {
+			tvTitle.setText("查找设备中...");
+			BLTManager.getInstance().clickBlt(MainActivity.this, BLTContant.BLUE_TOOTH_SEARTH);
 		});
-		cancelBtn.setOnClickListener(new View.OnClickListener() {
-			@Override
-			public void onClick(View v) {
+		cancelBtn.setOnClickListener(v -> {
 //				BLTManager.getInstance().unregisterReceiver(MainActivity.this);
-				build.dismiss();
-			}
+			build.dismiss();
 		});
-		listView.setOnItemClickListener(new OnItemClickListener() {
-			@Override
-			public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-				final BluetoothDevice bluetoothDevice = bltList.get(position);
-				tvTitle.setText("正在连接" + bluetoothDevice.getName());
-				//链接的操作应该在子线程
-				new Thread(new Runnable() {
-					@Override
-					public void run() {
-						BLTManager.getInstance().createBond(bluetoothDevice, handler);
-					}
-				}).start();
-			}
+		listView.setOnItemClickListener((parent, view1, position, id) -> {
+			final BluetoothDevice bluetoothDevice = bltList.get(position);
+			tvTitle.setText("正在连接" + bluetoothDevice.getName());
+			//链接的操作应该在子线程
+			new Thread(() -> BLTManager.getInstance().createBond(bluetoothDevice, handler)).start();
 		});
 	}
 	

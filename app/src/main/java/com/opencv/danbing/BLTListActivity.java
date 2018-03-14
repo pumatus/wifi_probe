@@ -20,7 +20,6 @@ import android.widget.TextView;
 import android.widget.Toast;
 import com.opencv.danbing.ble.BLTManager;
 import com.opencv.danbing.ble.ClsUtil;
-import com.opencv.danbing.ble.ReceiveSocketService;
 import com.opencv.danbing.greendao.db.GreenDaoManager;
 import com.opencv.danbing.greendao.entity.ScanResults;
 import com.opencv.danbing.greendao.entity.ScanTasks;
@@ -51,6 +50,9 @@ public class BLTListActivity extends AppCompatActivity {
 	private String defaultTaskID = "";
 	private String startDT, endDT = "";
 	
+	private BluetoothToos bluetoothToos = new BluetoothToos();
+	private BluetoothSocket bluetoothSocket;
+	
 	@SuppressLint("HandlerLeak")
 	private Handler handler = new Handler() {
 		@Override
@@ -58,7 +60,8 @@ public class BLTListActivity extends AppCompatActivity {
 			switch (msg.what) {
 				case 1:
 					String str = msg.obj.toString();
-					arr.add(str.substring(1, str.length() - 1));
+//					arr.add(str.substring(1, str.length() - 1));
+					arr.add(str);
 					list_address.setAdapter(myAdapter);
 					myAdapter.notifyDataSetChanged();
 					break;
@@ -89,9 +92,12 @@ public class BLTListActivity extends AppCompatActivity {
 		ClsUtil.setUserParam(BLTListActivity.this, "defaultTaskID", defaultTaskID);
 		
 		btn_cancel.setOnClickListener(v -> {
-//				BLTManager.getInstance().getmBluetoothAdapter().disable();
 			try {
 				BLTManager.getInstance().getmBluetoothSocket().close();
+				if (bluetoothSocket == null) {
+					return;
+				}
+				boolean flag = bluetoothToos.close_bluetooth(bluetoothSocket);
 				endDT = buildDT();
 				ScanTasks scanTasks = new ScanTasks();
 				scanTasks.setDefaultTaskID(defaultTaskID);
@@ -111,18 +117,17 @@ public class BLTListActivity extends AppCompatActivity {
 		});
 		
 		startDT = buildDT();
-		new Thread(() -> ReceiveSocketService.receiveMessage(handler)).start();
+//		new Thread(() -> ReceiveSocketService.receiveMessage(handler)).start();
 
-//		Intent intent = getIntent();
-//		if (intent != null) {
-//			String address = intent.getStringExtra("address");
-//			init(address);
-//		}
+		Intent intent = getIntent();
+		if (intent != null) {
+			String address = intent.getStringExtra("address");
+			new Thread(() -> init(address)).start();
+		}
 	}
 	
 	private void init(String address) {
-		BluetoothToos bluetoothToos = new BluetoothToos();
-		BluetoothSocket bluetoothSocket = bluetoothToos.getBluetoothSocket(address);
+		bluetoothSocket = bluetoothToos.getBluetoothSocket(address);
 		if (bluetoothSocket == null) {
 			return;
 		}
@@ -131,9 +136,11 @@ public class BLTListActivity extends AppCompatActivity {
 			Log.e("isConn  ", "连接成功");
 			bluetoothToos.getSockeMsg(bluetoothSocket, new IBluetoothListener() {
 				@Override
-				public void getMsg(final String s) {
-					Log.e("isConn  ", s + "");
-					arr.add(s);
+				public void getMsg(final String str) {
+					Message message = new Message();
+					message.obj = str;
+					message.what = 1;
+					handler.sendMessage(message);
 				}
 				
 				@Override
@@ -260,6 +267,10 @@ public class BLTListActivity extends AppCompatActivity {
 		super.onDestroy();
 		try {
 			BLTManager.getInstance().getmBluetoothSocket().close();
+			if (bluetoothSocket == null) {
+				return;
+			}
+			boolean flag = bluetoothToos.close_bluetooth(bluetoothSocket);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
