@@ -5,7 +5,6 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
@@ -64,7 +63,6 @@ public class DataResultStringsAndActivity extends AppCompatActivity implements O
 						if (isSelected.get(i).equals(true)) {
 							String defaultTaskID = scanTasks.get(i).getDefaultTaskID();
 							strings.add(defaultTaskID);
-							Log.e("defaultTaskID", defaultTaskID + " ");
 						}
 					}
 					if (strings.size() > 0) {

@@ -64,6 +64,22 @@ public class BLTListActivity extends AppCompatActivity {
 					arr.add(str);
 					list_address.setAdapter(myAdapter);
 					myAdapter.notifyDataSetChanged();
+					
+					Calendar calendar = Calendar.getInstance();
+					String data = (calendar.get(Calendar.YEAR)) + "/" + (calendar.get(Calendar.MONTH) + 1) + "/" + (calendar.get(Calendar.DAY_OF_MONTH));
+					String time = (calendar.get(Calendar.HOUR_OF_DAY)) + ":" + (calendar.get(Calendar.MINUTE)) + ":" + (calendar.get(Calendar.SECOND));
+					String dt = (calendar.get(Calendar.MONTH) + 1) + "/" + (calendar.get(Calendar.DAY_OF_MONTH)) + " "
+							+ (calendar.get(Calendar.HOUR_OF_DAY)) + ":" + (calendar.get(Calendar.MINUTE)) + ":" + (calendar.get(Calendar.SECOND));
+					
+					String dataType = macMatchcs(str.replace(":", "-"));
+					ScanResults scanResults = new ScanResults();
+					scanResults.setDt(dt);
+					scanResults.setDataStr(data);
+					scanResults.setTimeStr(time);
+					scanResults.setMacAddress(str);
+					scanResults.setDeviceType(dataType);
+					scanResults.setDefaultTaskID(defaultTaskID);
+					scanResultsDao.insert(scanResults);
 					break;
 				default:
 					break;
@@ -197,8 +213,6 @@ public class BLTListActivity extends AppCompatActivity {
 			Calendar calendar = Calendar.getInstance();
 			String data = (calendar.get(Calendar.YEAR)) + "/" + (calendar.get(Calendar.MONTH) + 1) + "/" + (calendar.get(Calendar.DAY_OF_MONTH));
 			String time = (calendar.get(Calendar.HOUR_OF_DAY)) + ":" + (calendar.get(Calendar.MINUTE)) + ":" + (calendar.get(Calendar.SECOND));
-			String dt = (calendar.get(Calendar.MONTH) + 1) + "/" + (calendar.get(Calendar.DAY_OF_MONTH)) + " "
-					+ (calendar.get(Calendar.HOUR_OF_DAY)) + ":" + (calendar.get(Calendar.MINUTE)) + ":" + (calendar.get(Calendar.SECOND));
 
 			String dataType = macMatchcs(arr.get(position).replace(":", "-"));
 			String address = arr.get(position);
@@ -206,14 +220,6 @@ public class BLTListActivity extends AppCompatActivity {
 			viewHolder.bltType.setText(dataType);
 			viewHolder.bltTime.setText(data + " " + time);
 			
-			ScanResults scanResults = new ScanResults();
-			scanResults.setDt(dt);
-			scanResults.setDataStr(data);
-			scanResults.setTimeStr(time);
-			scanResults.setMacAddress(address);
-			scanResults.setDeviceType(dataType);
-			scanResults.setDefaultTaskID(defaultTaskID);
-			scanResultsDao.insert(scanResults);
 			return v;
 		}
 		

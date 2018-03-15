@@ -19,6 +19,7 @@ import com.opencv.danbing.greendao.gen.ScanResultsDao;
 import com.opencv.danbing.greendao.gen.ScanResultsDao.Properties;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
@@ -33,6 +34,9 @@ public class DataResultActivity extends AppCompatActivity {
 	private List strList = new ArrayList();
 	private List<ScanResults> resultsListCompare = new ArrayList<>();
 	private List<String> defaultTaskIDList = new ArrayList<>();
+	private List<List<String>> stringlists = new ArrayList<>();
+	private List<String> setStrings = new ArrayList<>();
+	private boolean adapterFlag = false;
 	
 	@Override
 	protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -48,26 +52,52 @@ public class DataResultActivity extends AppCompatActivity {
 			strList.clear();
 			String defaultTaskID = intent.getStringExtra("defaultTaskID");
 			if (defaultTaskID != null) {
-				scanResultsList = scanResultsDao.queryBuilder().where(Properties.DefaultTaskID.eq(defaultTaskID)).list();
+				adapterFlag = true;
+				scanResultsList = scanResultsDao.queryBuilder().where(Properties.DefaultTaskID.eq(defaultTaskID))
+						.list();
+				
+				if (scanResultsList != null && scanResultsList.size() > 0) {
+					for (int i = 0; i < scanResultsList.size(); i++) {
+						strList.add(scanResultsList.get(i).getMacAddress());
+					}
+					resultsListCompare = removeDuplicateResult(scanResultsList);
+					listView.setAdapter(myAdapter);
+					myAdapter.notifyDataSetChanged();
+				}
+				
+				listView.setAdapter(myAdapter);
+				myAdapter.notifyDataSetChanged();
 			}
 			
 			defaultTaskIDList.clear();
 			defaultTaskIDList = intent.getStringArrayListExtra("defaultTaskIDList");
 			if (defaultTaskIDList != null && defaultTaskIDList.size() > 0) {
+				adapterFlag = false;
 				for (int i = 0; i < defaultTaskIDList.size(); i++) {
-					List<ScanResults> scanResults = scanResultsDao.queryBuilder().where(Properties.DefaultTaskID.eq(defaultTaskIDList.get(i))).list();
+					List<ScanResults> scanResults = scanResultsDao.queryBuilder()
+							.where(Properties.DefaultTaskID.eq(defaultTaskIDList.get(i))).list();
 					scanResultsList.addAll(scanResults);
+					
+					List<String> strings = new ArrayList<>();
+					for (ScanResults scanResults1 : scanResults) {
+						strings.add(scanResults1.getMacAddress());
+					}
+					stringlists.add(strings);
+					
 				}
-			}
-			if (scanResultsList != null && scanResultsList.size() > 0) {
-				
-				for (int i = 0; i < scanResultsList.size(); i++) {
-					strList.add(scanResultsList.get(i).getMacAddress());
+				Set<String> set = getIntersection(stringlists);
+				setStrings.addAll(set);
+				/////
+				if (scanResultsList != null && scanResultsList.size() > 0) {
+					for (int i = 0; i < scanResultsList.size(); i++) {
+						strList.add(scanResultsList.get(i).getMacAddress());
+						Log.e("scanResultsList ", scanResultsList.get(i).getMacAddress());
+					}
+					resultsListCompare = removeDuplicateResult(scanResultsList);
+					
+					listView.setAdapter(myAdapter);
+					myAdapter.notifyDataSetChanged();
 				}
-				resultsListCompare = removeDuplicateResult(scanResultsList);
-				
-				listView.setAdapter(myAdapter);
-				myAdapter.notifyDataSetChanged();
 			}
 		}
 	}
@@ -83,12 +113,20 @@ public class DataResultActivity extends AppCompatActivity {
 		
 		@Override
 		public int getCount() {
-			return resultsListCompare.size();
+			if (adapterFlag) {
+				return resultsListCompare.size();
+			} else {
+				return setStrings.size();
+			}
 		}
 		
 		@Override
 		public Object getItem(int position) {
-			return resultsListCompare.get(position);
+			if (adapterFlag) {
+				return resultsListCompare.get(position);
+			} else {
+				return setStrings.get(position);
+			}
 		}
 		
 		@Override
@@ -113,22 +151,76 @@ public class DataResultActivity extends AppCompatActivity {
 				v = convertView;
 				viewHolder = (ViewHolder) convertView.getTag();
 			}
-			viewHolder.bltAddress.setText(resultsListCompare.get(position).getMacAddress());
-			viewHolder.bltType.setText(resultsListCompare.get(position).getDeviceType());
-			viewHolder.bltCount.setText(Collections.frequency(strList, scanResultsList.get(position).getMacAddress()) + "");
-			viewHolder.bltTime.setText("采集时间: " + resultsListCompare.get(position).getDt());
-			Log.e("frequency  ", Collections.frequency(strList, scanResultsList.get(position).getMacAddress()) + "  " + scanResultsList.get(position).getMacAddress());
+			if (adapterFlag) {
+				viewHolder.bltAddress.setText(resultsListCompare.get(position).getMacAddress());
+				viewHolder.bltType.setText(resultsListCompare.get(position).getDeviceType());
+				viewHolder.bltCount.setText(Collections.frequency(strList, scanResultsList.get(position).getMacAddress()) + "");
+				viewHolder.bltTime.setText("采集时间: " + resultsListCompare.get(position).getDt());
+				
+			} else {
+				viewHolder.bltAddress.setText(setStrings.get(position));
+				viewHolder.bltType.setText(buildType(setStrings.get(position)));
+				viewHolder.bltCount.setText(Collections.frequency(strList, setStrings.get(position)) + "");
+				viewHolder.bltTime.setText("采集时间: " + buildTime(setStrings.get(position)));
+			}
 			return v;
 		}
 		
 		private class ViewHolder {
+			
 			TextView bltAddress, bltType, bltCount, bltTime;
 		}
 	}
 	
+	private String buildType(String mac) {
+		String type = "";
+		for (int i = 0; i < scanResultsList.size(); i++) {
+			if (mac.equals(scanResultsList.get(i).getMacAddress())) {
+				type = scanResultsList.get(i).getDeviceType();
+			}
+		}
+		return type;
+	}
+	
+	private String buildTime(String mac) {
+		String time = "";
+		for (int i = 0; i < scanResultsList.size(); i++) {
+			if (mac.equals(scanResultsList.get(i).getMacAddress())) {
+				time = scanResultsList.get(i).getDt();
+			}
+		}
+		return time;
+	}
+	
 	private static ArrayList<ScanResults> removeDuplicateResult(List<ScanResults> scanResults) {
-		Set<ScanResults> set = new TreeSet<>((o1, o2) -> o1.getMacAddress().compareToIgnoreCase(o2.getMacAddress()));
+		Set<ScanResults> set = new TreeSet<>((o1, o2) -> o1.getMacAddress().compareTo(o2.getMacAddress()));
 		set.addAll(scanResults);
 		return new ArrayList<>(set);
 	}
+	
+	//取多个集合的交集
+	private Set<String> getIntersection(List<List<String>> list) {
+		Set<String> set = new HashSet<>();
+		int size = list.size();
+		if (size > 1) {
+//取集合中的交集
+			for (int i = 0; i < size; i++) {
+				int j = i + 1;
+				if (j < size) {
+					list.get(0).retainAll(list.get(j));
+					if (i == size - 2) {
+						List<String> resultList = list.get(0);
+						set.addAll(resultList);
+					}
+				}
+			}
+		} else {
+//只有一个集合则不取交集
+			for (List<String> list2 : list) {
+				set.addAll(list2);
+			}
+		}
+		return set;
+	}
+	
 }
