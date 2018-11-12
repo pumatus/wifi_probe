@@ -18,15 +18,17 @@ import android.widget.Button;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
+
 import com.opencv.danbing.ble.BLTManager;
 import com.opencv.danbing.ble.ClsUtil;
+import com.opencv.danbing.blelib.BluetoothToos;
+import com.opencv.danbing.blelib.IBluetoothListener;
 import com.opencv.danbing.greendao.db.GreenDaoManager;
 import com.opencv.danbing.greendao.entity.ScanResults;
 import com.opencv.danbing.greendao.entity.ScanTasks;
 import com.opencv.danbing.greendao.gen.ScanResultsDao;
 import com.opencv.danbing.greendao.gen.ScanTasksDao;
-import com.xiecheng.libproject.BluetoothToos;
-import com.xiecheng.libproject.IBluetoothListener;
+
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -40,7 +42,7 @@ import java.util.List;
  */
 
 public class BLTListActivity extends AppCompatActivity {
-	
+
 	private ListView list_address;
 	private List<String> arr = new ArrayList<>();
 	private MyAdapter myAdapter;
@@ -49,10 +51,10 @@ public class BLTListActivity extends AppCompatActivity {
 	private ScanTasksDao scanTasksDao;
 	private String defaultTaskID = "";
 	private String startDT, endDT = "";
-	
+
 	private BluetoothToos bluetoothToos = new BluetoothToos();
 	private BluetoothSocket bluetoothSocket;
-	
+
 	@SuppressLint("HandlerLeak")
 	private Handler handler = new Handler() {
 		@Override
@@ -64,13 +66,13 @@ public class BLTListActivity extends AppCompatActivity {
 					arr.add(str);
 					list_address.setAdapter(myAdapter);
 					myAdapter.notifyDataSetChanged();
-					
+
 					Calendar calendar = Calendar.getInstance();
 					String data = (calendar.get(Calendar.YEAR)) + "/" + (calendar.get(Calendar.MONTH) + 1) + "/" + (calendar.get(Calendar.DAY_OF_MONTH));
 					String time = (calendar.get(Calendar.HOUR_OF_DAY)) + ":" + (calendar.get(Calendar.MINUTE)) + ":" + (calendar.get(Calendar.SECOND));
 					String dt = (calendar.get(Calendar.MONTH) + 1) + "/" + (calendar.get(Calendar.DAY_OF_MONTH)) + " "
 							+ (calendar.get(Calendar.HOUR_OF_DAY)) + ":" + (calendar.get(Calendar.MINUTE)) + ":" + (calendar.get(Calendar.SECOND));
-					
+
 					String dataType = macMatchcs(str.replace(":", "-"));
 					ScanResults scanResults = new ScanResults();
 					scanResults.setDt(dt);
@@ -86,16 +88,16 @@ public class BLTListActivity extends AppCompatActivity {
 			}
 		}
 	};
-	
+
 	@Override
 	protected void onCreate(@Nullable Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_listview);
-		
+
 		list_address = findViewById(R.id.list_address);
 		btn_cancel = findViewById(R.id.btn_cancel);
 		myAdapter = new MyAdapter(BLTListActivity.this);
-		
+
 		scanResultsDao = GreenDaoManager.getDaoSession().getScanResultsDao();
 		scanTasksDao = GreenDaoManager.getDaoSession().getScanTasksDao();
 		String i = ClsUtil.getParam(BLTListActivity.this, "defaultTaskID");
@@ -106,7 +108,7 @@ public class BLTListActivity extends AppCompatActivity {
 			defaultTaskID = String.valueOf(o + 1);
 		}
 		ClsUtil.setUserParam(BLTListActivity.this, "defaultTaskID", defaultTaskID);
-		
+
 		btn_cancel.setOnClickListener(v -> {
 			try {
 				BLTManager.getInstance().getmBluetoothSocket().close();
@@ -131,7 +133,7 @@ public class BLTListActivity extends AppCompatActivity {
 				e.printStackTrace();
 			}
 		});
-		
+
 		startDT = buildDT();
 //		new Thread(() -> ReceiveSocketService.receiveMessage(handler)).start();
 
@@ -141,7 +143,7 @@ public class BLTListActivity extends AppCompatActivity {
 			new Thread(() -> init(address)).start();
 		}
 	}
-	
+
 	private void init(String address) {
 		bluetoothSocket = bluetoothToos.getBluetoothSocket(address);
 		if (bluetoothSocket == null) {
@@ -153,12 +155,23 @@ public class BLTListActivity extends AppCompatActivity {
 			bluetoothToos.getSockeMsg(bluetoothSocket, new IBluetoothListener() {
 				@Override
 				public void getMsg(final String str) {
+					Log.e("isConn  ", str + "");
+					String mac;
+					String dbs;
+					if (str.length() == 17) {
+						mac = str;
+						dbs = "";
+					} else {        //DB
+						mac = str.split(" ")[0];
+						dbs = str.split(" ")[1].replace("rssi:", "");
+					}
+
 					Message message = new Message();
-					message.obj = str;
+					message.obj = mac;
 					message.what = 1;
 					handler.sendMessage(message);
 				}
-				
+
 				@Override
 				public void getMsgList(List<String> list) {
 					Log.e("isConn  ", list.size() + "");
@@ -168,31 +181,31 @@ public class BLTListActivity extends AppCompatActivity {
 			Log.e("isConn  ", "连接失败");
 		}
 	}
-	
+
 	private class MyAdapter extends BaseAdapter {
-		
+
 		private LayoutInflater layoutInflater;
-		
+
 		private MyAdapter(Context context) {
 			super();
 			layoutInflater = LayoutInflater.from(context);
 		}
-		
+
 		@Override
 		public int getCount() {
 			return arr.size();
 		}
-		
+
 		@Override
 		public Object getItem(int position) {
 			return arr.get(position);
 		}
-		
+
 		@Override
 		public long getItemId(int position) {
 			return position;
 		}
-		
+
 		@SuppressLint({"InflateParams", "SetTextI18n"})
 		@Override
 		public View getView(int position, View convertView, ViewGroup parent) {
@@ -209,7 +222,7 @@ public class BLTListActivity extends AppCompatActivity {
 				v = convertView;
 				viewHolder = (ViewHolder) convertView.getTag();
 			}
-			
+
 			Calendar calendar = Calendar.getInstance();
 			String data = (calendar.get(Calendar.YEAR)) + "/" + (calendar.get(Calendar.MONTH) + 1) + "/" + (calendar.get(Calendar.DAY_OF_MONTH));
 			String time = (calendar.get(Calendar.HOUR_OF_DAY)) + ":" + (calendar.get(Calendar.MINUTE)) + ":" + (calendar.get(Calendar.SECOND));
@@ -219,28 +232,28 @@ public class BLTListActivity extends AppCompatActivity {
 			viewHolder.bltAddress.setText(address);
 			viewHolder.bltType.setText(dataType);
 			viewHolder.bltTime.setText(data + " " + time);
-			
+
 			return v;
 		}
-		
+
 		private class ViewHolder {
 			TextView bltAddress, bltType, bltTime;
 		}
 	}
-	
+
 	private String macMatchcs(String mac) {
-		if (mac.startsWith("C4-07-2F") || mac.startsWith("0C-D6-BD")|| mac.startsWith("BC-25-E0")
+		if (mac.startsWith("C4-07-2F") || mac.startsWith("0C-D6-BD") || mac.startsWith("BC-25-E0")
 				|| mac.startsWith("58-7F-66") || mac.startsWith("90-67-1C") ||
 				mac.startsWith("74-88-2A") || mac.startsWith("50-01-6b")) {
 			return "华为";
 		}
 		if (mac.startsWith("9C-99-A0") || mac.startsWith("18-59-36") || mac.startsWith("98-FA-E3") || mac
 				.startsWith("64-09-80") || mac.startsWith("64-CC-2E") || mac.startsWith("F8-A4-5F")) {
-			return  "小米";
+			return "小米";
 		}
 		if (mac.startsWith("44-66-FC ") || mac.startsWith("E8-BB-A8") || mac.startsWith("BC-3A-EA")
 				|| mac.startsWith("6C-5C-14") || mac.startsWith("8C-0E-E3") || mac.startsWith("2C-5B-B8")) {
-			return  "oppo";
+			return "oppo";
 		}
 		if (mac.startsWith("C4-B3-01") || mac.startsWith("E0-5F-45") || mac.startsWith("48-3B-38")
 				|| mac.startsWith("E0-C7-67") || mac.startsWith("4C-32-75") || mac.startsWith("90-B9-31")) {
@@ -267,7 +280,7 @@ public class BLTListActivity extends AppCompatActivity {
 		}
 		return "其他";
 	}
-	
+
 	@Override
 	protected void onDestroy() {
 		super.onDestroy();
@@ -281,14 +294,14 @@ public class BLTListActivity extends AppCompatActivity {
 			e.printStackTrace();
 		}
 	}
-	
+
 	private String buildDT() {
 		Date date = new Date();
 		//yyyy-MM-dd
 		@SuppressLint("SimpleDateFormat") SimpleDateFormat dateFormat = new SimpleDateFormat("HH:mm:ss");
 		return dateFormat.format(date);
 	}
-	
+
 	private String buildData() {
 		Date date = new Date();
 		@SuppressLint("SimpleDateFormat") SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");

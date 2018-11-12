@@ -13,28 +13,28 @@ import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
-import android.widget.AdapterView;
-import android.widget.AdapterView.OnItemClickListener;
 import android.widget.BaseAdapter;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
+
 import com.opencv.danbing.ble.BLTContant;
 import com.opencv.danbing.ble.BLTManager;
+
 import java.util.ArrayList;
 import java.util.List;
 
 @SuppressLint("SetTextI18n")
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
-	
+
 	private List<BluetoothDevice> bltList;
 	private MyAdapter myAdapter;
 	private TextView textViewTitle;
 	private TextView tvTitle;
 	private AlertDialog build;
-	
+
 	@SuppressLint("HandlerLeak")
 	private Handler handler = new Handler() {
 		@Override
@@ -73,49 +73,52 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 			}
 		}
 	};
-	
+
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
-		
+
 		BLTManager.getInstance().initBltManager(this);
-		
+
 		ImageView imageView = findViewById(R.id.img_click);
 		imageView.setOnClickListener(this);
 		ImageView dataImg = findViewById(R.id.img_data_strings_and);
 		dataImg.setOnClickListener(this);
 		textViewTitle = findViewById(R.id.tv_title);
-		
+
 		bltList = new ArrayList<>();
 		myAdapter = new MyAdapter();
-		//检查蓝牙是否开启
-		BLTManager.getInstance().checkBleDevice(this);
-		//注册蓝牙扫描广播
-		blueToothRegister();
-		//第一次进来搜索设备
-		BLTManager.getInstance().clickBlt(this, BLTContant.BLUE_TOOTH_SEARTH);
+//		//检查蓝牙是否开启
+//		BLTManager.getInstance().checkBleDevice(this);
+//		//注册蓝牙扫描广播
+//		blueToothRegister();
+//		//第一次进来搜索设备
+//		BLTManager.getInstance().clickBlt(this, BLTContant.BLUE_TOOTH_SEARTH);
 	}
-	
+
 	/**
 	 * 注册蓝牙回调广播
 	 */
 	private void blueToothRegister() {
 		BLTManager.getInstance().registerBltReceiver(this, new BLTManager.OnRegisterBltReceiver() {
-			
+
 			/**搜索到新设备
 			 * @param device
 			 */
 			@Override
 			public void onBluetoothDevice(BluetoothDevice device) {
 				if (bltList != null && !bltList.contains(device)) {
-					bltList.add(device);
+//					if (null != device.getName() && device.getName().contains("XC_")) {
+						if (null != device.getName()) {
+						bltList.add(device);
+					}
 				}
 				if (myAdapter != null) {
 					myAdapter.notifyDataSetChanged();
 				}
 			}
-			
+
 			/**连接中
 			 * @param device
 			 */
@@ -123,7 +126,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 			public void onBltIng(BluetoothDevice device) {
 				tvTitle.setText("连接" + device.getName() + "中……");
 			}
-			
+
 			/**连接完成
 			 * @param device
 			 */
@@ -131,7 +134,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 			public void onBltEnd(BluetoothDevice device) {
 				tvTitle.setText("连接" + device.getName() + "完成");
 			}
-			
+
 			/**取消链接
 			 * @param device
 			 */
@@ -141,11 +144,17 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 			}
 		});
 	}
-	
+
 	@Override
 	public void onClick(View v) {
 		switch (v.getId()) {
 			case R.id.img_click:
+				//检查蓝牙是否开启
+				BLTManager.getInstance().checkBleDevice(this);
+				//注册蓝牙扫描广播
+				blueToothRegister();
+				//第一次进来搜索设备
+				BLTManager.getInstance().clickBlt(this, BLTContant.BLUE_TOOTH_SEARTH);
 				showOneDialog();
 				break;
 			case R.id.img_data_strings_and:
@@ -155,7 +164,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 				break;
 		}
 	}
-	
+
 	private void showOneDialog() {
 		build = new AlertDialog.Builder(this).create();
 		View view = getLayoutInflater().inflate(R.layout.dialog_costom, null);
@@ -178,7 +187,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 			BLTManager.getInstance().clickBlt(MainActivity.this, BLTContant.BLUE_TOOTH_SEARTH);
 		});
 		cancelBtn.setOnClickListener(v -> {
-//				BLTManager.getInstance().unregisterReceiver(MainActivity.this);
+			bltList.clear();
+			BLTManager.getInstance().unregisterReceiver(MainActivity.this);
 			build.dismiss();
 		});
 		listView.setOnItemClickListener((parent, view1, position, id) -> {
@@ -188,24 +198,24 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 			new Thread(() -> BLTManager.getInstance().createBond(bluetoothDevice, handler)).start();
 		});
 	}
-	
+
 	private class MyAdapter extends BaseAdapter {
-		
+
 		@Override
 		public int getCount() {
 			return bltList.size();
 		}
-		
+
 		@Override
 		public Object getItem(int position) {
 			return bltList.get(position);
 		}
-		
+
 		@Override
 		public long getItemId(int position) {
 			return position;
 		}
-		
+
 		@Override
 		public View getView(int position, View convertView, ViewGroup parent) {
 			View v;
@@ -225,16 +235,17 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 			viewHolder.bltAddress.setText(device.getAddress());
 			return v;
 		}
-		
+
 		private class ViewHolder {
-			
+
 			TextView bltName, bltAddress;
 		}
 	}
-	
+
 	@Override
 	protected void onDestroy() {
 		super.onDestroy();
+		bltList.clear();
 		BLTManager.getInstance().unregisterReceiver(this);
 	}
 }
